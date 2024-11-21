@@ -13,11 +13,17 @@ public class FortisObj {
     @Id
     @Column(name = "id")
     private int id;
+
+    @Column(name = "post_id")
+    private int postId;
+
     @Basic
     @Column(name = "data")
     private byte[] data;
+
     @Column(name = "iv")
     private byte[] iv;
+
     @Basic
     @Column(name = "upload_time")
     private LocalDateTime uploadTime;

@@ -1,17 +1,17 @@
 package com.cipher.controller;
 
 import com.cipher.auth.AesEncryptUtil;
+import com.cipher.dto.BasicDto;
 import com.cipher.entity.FortisObj;
+import com.cipher.entity.PostEntity;
 import com.cipher.service.FortisObjService;
+import com.cipher.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.crypto.SecretKey;
@@ -25,13 +25,27 @@ public class FortisObjController {
 private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
     @Autowired
     FortisObjService fortisObjService;
+    @Autowired
+    PostService postService;
 
+    @RequestMapping(value = "/uploadPost", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public ResponseEntity<BasicDto> uploadPost(@RequestBody PostEntity post) {
+        BasicDto basicDto = new BasicDto();
+        try {
+            Integer id =postService.add(post.getMsg());
+            basicDto.setId(id);
+            return ResponseEntity.ok().body(basicDto);
+        } catch (Exception e) {
+            basicDto.setMsg(e.getMessage());
+            return ResponseEntity.ok().body(basicDto);
+        }
+    }
     @RequestMapping(value = "/sursum", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
-    public ResponseEntity<String> uploadImage(@RequestParam("files") MultipartFile[] uploadFiles) {
+    public ResponseEntity<String> uploadImage(@RequestParam("id") Integer id, @RequestParam("files") MultipartFile[] uploadFiles) {
         try {
 
             for (MultipartFile uploadFile : uploadFiles) {
-                fortisObjService.encryptAndSaveImage(uploadFile);
+                fortisObjService.encryptAndSaveImage(id, uploadFile);
             }
 
             return ResponseEntity.status(HttpStatus.CREATED).body("Success");
@@ -42,7 +56,7 @@ private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
 
 
     @RequestMapping(value = "/deorsum", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
-    public ResponseEntity<?> downloadImages(@RequestParam("id") String id) {
+    public ResponseEntity<?> downloadImages(@RequestParam("id") Integer id) {
         Optional<FortisObj> optionalFiles = fortisObjService.findById(id);
 
         if (optionalFiles.isEmpty()) {

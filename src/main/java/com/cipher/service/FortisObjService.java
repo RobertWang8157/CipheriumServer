@@ -21,11 +21,11 @@ public class FortisObjService {
 private FortisObjRepository fortisObjRepository;
 
 
-public Optional<FortisObj> findById(String id){
+public Optional<FortisObj> findById(Integer id){
 
     return fortisObjRepository.findById(id);
 }
-    public void encryptAndSaveImage(MultipartFile file)  {
+    public void encryptAndSaveImage(Integer postId, MultipartFile file)  {
         try {
             LocalDateTime nowDate = LocalDateTime.now();
             // 生成随机 IV
@@ -40,6 +40,7 @@ public Optional<FortisObj> findById(String id){
             FortisObj obj = new FortisObj();
             obj.setData(encryptedBytes);
             obj.setUploadTime(nowDate);
+            obj.setPostId(postId);
             obj.setIv(iv);
             fortisObjRepository.save(obj);
         }catch (Exception e){
