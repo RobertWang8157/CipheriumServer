@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -87,6 +88,16 @@ private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error occurred during decryption");
+        }
+    }
+
+    @RequestMapping(value = "/getPost", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public ResponseEntity<List<PostEntity>> getPost() {
+        try {
+            List<PostEntity> posts = postService.findPosts();
+            return ResponseEntity.ok().body(posts);
+        } catch (Exception e) {
+            return null;
         }
     }
 
