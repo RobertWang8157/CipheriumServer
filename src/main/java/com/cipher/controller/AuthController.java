@@ -4,22 +4,23 @@ import com.cipher.auth.JWTProvider;
 import com.cipher.dto.AuthDto;
 import com.cipher.dto.BasicDto;
 import com.cipher.dto.LoginDto;
-import com.cipher.entity.User;
 import com.cipher.exception.ForbiddenException;
-import com.cipher.repostory.UserRepository;
 import com.cipher.service.LogInOutService;
 import com.cipher.service.UserService;
+import com.cipher.util.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -60,21 +61,13 @@ public class AuthController {
     }
 
 
-        @GetMapping("/hello")
-        public String hello() {
-            return "Hello, World!";
-        }
-
-    private void authenticate(LoginDto request, UsernamePasswordAuthenticationToken token, LocalDateTime nowTime) throws Exception {
+    private void authenticate(LoginDto request, UsernamePasswordAuthenticationToken token, LocalDateTime nowTime){
         try {
             authenticationManager.authenticate(token);
-        } catch (BadCredentialsException e) {
-            logger.error("Invalid credentials: {}", request.getUserName());
-            logInOutService.createLoginFail(token.getName(),nowTime);
-            throw new ForbiddenException("login fail");
         } catch (Exception e) {
             e.printStackTrace();
-            throw new ForbiddenException("login fail");
+            logInOutService.createLoginFail(token.getName(),nowTime);
+            throw new ForbiddenException(Message.loginFail);
         }
     }
 

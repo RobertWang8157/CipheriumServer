@@ -7,6 +7,8 @@ import com.cipher.entity.PostEntity;
 import com.cipher.service.FortisObjService;
 import com.cipher.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,7 +24,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping(value = "/fortis/obj", produces = MediaType.APPLICATION_JSON_VALUE)
-public class FortisObjController {
+public class FortisObjController extends AbstractController{
 private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
     @Autowired
     FortisObjService fortisObjService;
@@ -42,13 +44,11 @@ private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
         }
     }
     @RequestMapping(value = "/sursum", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
-    public ResponseEntity<String> uploadImage(@RequestParam("id") Integer id, @RequestParam("files") MultipartFile[] uploadFiles) {
+    public ResponseEntity uploadImage(@RequestHeader("X-post-id") Integer postId, @RequestParam("files") MultipartFile[] uploadFiles) {
         try {
-
             for (MultipartFile uploadFile : uploadFiles) {
-                fortisObjService.encryptAndSaveImage(id, uploadFile);
+                fortisObjService.encryptAndSaveImage(postId, uploadFile);
             }
-
             return ResponseEntity.status(HttpStatus.CREATED).body("Success");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload: " + e.getMessage());
@@ -56,12 +56,49 @@ private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
     }
 
 
-    @RequestMapping(value = "/deorsum", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
-    public ResponseEntity<?> downloadImages(@RequestParam("id") Integer id) {
+//    @RequestMapping(value = "/deorsum", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+//    public ResponseEntity<?> downloadImages(@RequestParam("id") Integer id) {
+//        Optional<FortisObj> optionalFiles = fortisObjService.findById(id);
+//
+//        if (optionalFiles.isEmpty()) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("File not found");
+//        }
+//
+//        FortisObj encryptedFile = optionalFiles.get();
+//        byte[] encryptedData = encryptedFile.getData();
+//        byte[] iv = encryptedFile.getIv();
+//
+//        try {
+//            // 解密密钥
+//            byte[] decodedKey = Base64.getDecoder().decode(secretKey);
+//            SecretKey secretKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+//
+//            // 使用AES解密数据
+//            byte[] decryptedData = AesEncryptUtil.decrypt(encryptedData, secretKey, iv);
+//
+//            // 设置响应头，标明文件是下载类型
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.add("Content-Disposition", "attachment; filename=\"image.jpg\"");  // 文件名
+//
+//            return ResponseEntity.ok()
+//                    .headers(headers)
+//                    .contentType(MediaType.IMAGE_JPEG)  // 设置文件类型为图片
+//                    .body(decryptedData);  // 响应文件内容
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body("Error occurred during decryption");
+//
+//        }
+//    }
+
+    @RequestMapping(value = "/deorsum", method = RequestMethod.POST)
+    public ResponseEntity<Resource> downloadImages(@RequestParam("id") Integer id) {
         Optional<FortisObj> optionalFiles = fortisObjService.findById(id);
 
         if (optionalFiles.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("File not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
         FortisObj encryptedFile = optionalFiles.get();
@@ -73,23 +110,29 @@ private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
             byte[] decodedKey = Base64.getDecoder().decode(secretKey);
             SecretKey secretKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
 
-            // 使用AES解密数据
+            // 解密文件数据
             byte[] decryptedData = AesEncryptUtil.decrypt(encryptedData, secretKey, iv);
 
-            // 设置响应头，标明文件是下载类型
+            // 将解密后的数据包装为 InputStreamResource
+            ByteArrayResource resource = new ByteArrayResource(decryptedData);
+
+            // 设置响应头，标明文件类型和文件名
             HttpHeaders headers = new HttpHeaders();
-            headers.add("Content-Disposition", "attachment; filename=\"image.jpg\"");  // 文件名
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=image.jpg");
 
             return ResponseEntity.ok()
                     .headers(headers)
-                    .contentType(MediaType.IMAGE_JPEG)  // 设置文件类型为图片
-                    .body(decryptedData);  // 响应文件内容
+                    .contentLength(decryptedData.length)
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)  // 用于通用文件下载
+                    .body(resource);
+
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error occurred during decryption");
+                    .body(null);
         }
     }
+
 
     @RequestMapping(value = "/getPost", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
     public ResponseEntity<List<PostEntity>> getPost() {

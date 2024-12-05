@@ -7,7 +7,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "com.cipher")
 public class CipheriumApplication {
 
     public static void main(String[] args) {
