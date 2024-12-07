@@ -95,7 +95,7 @@ private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
 
     @RequestMapping(value = "/deorsum", method = RequestMethod.POST)
     public ResponseEntity<Resource> downloadImages(@RequestParam("id") Integer id) {
-        Optional<FortisObj> optionalFiles = fortisObjService.findById(id);
+        Optional<FortisObj> optionalFiles = fortisObjService.findByPostId(id);
 
         if (optionalFiles.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);

@@ -21,9 +21,9 @@ public class FortisObjService {
 private FortisObjRepository fortisObjRepository;
 
 
-public Optional<FortisObj> findById(Integer id){
+public Optional<FortisObj> findByPostId(Integer id){
 
-    return fortisObjRepository.findById(id);
+    return fortisObjRepository.findByPostId(id);
 }
     public void encryptAndSaveImage(Integer postId, MultipartFile file)  {
         try {
