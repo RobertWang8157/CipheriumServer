@@ -23,9 +23,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
 import java.util.List;
-import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 @RestController
 @RequestMapping(value = "/fortis/obj", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -133,13 +133,13 @@ private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
 
     @RequestMapping(value = "/deorsum", method = RequestMethod.POST)
     public ResponseEntity<Resource> downloadImages(@RequestParam("id") Integer id) {
-        Optional<FortisObj> optionalFiles = fortisObjService.findByPostId(id);
+        List<FortisObj> optionalFiles = fortisObjService.findByPostId(id);
 
         if (optionalFiles.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
-        FortisObj encryptedFile = optionalFiles.get();
+        FortisObj encryptedFile = optionalFiles.get(0);
         byte[] encryptedData = encryptedFile.getData();
         byte[] iv = encryptedFile.getIv();
 
@@ -151,16 +151,26 @@ private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
             // 解密文件数据
             byte[] decryptedData = AesEncryptUtil.decrypt(encryptedData, secretKey, iv);
 
-            // 将解密后的数据包装为 InputStreamResource
-            ByteArrayResource resource = new ByteArrayResource(decryptedData);
+            // 创建 ZIP 文件流
+            ByteArrayOutputStream zipOutputStream = new ByteArrayOutputStream();
+            try (ZipOutputStream zos = new ZipOutputStream(zipOutputStream)) {
+                // 创建 ZIP 条目并写入解密数据
+                ZipEntry zipEntry = new ZipEntry("image.jpg");
+                zos.putNextEntry(zipEntry);
+                zos.write(decryptedData);
+                zos.closeEntry();
+            }
+
+            // 将 ZIP 文件流包装为资源
+            ByteArrayResource resource = new ByteArrayResource(zipOutputStream.toByteArray());
 
             // 设置响应头，标明文件类型和文件名
             HttpHeaders headers = new HttpHeaders();
-            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=image.jpg");
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=files.zip");
 
             return ResponseEntity.ok()
                     .headers(headers)
-                    .contentLength(decryptedData.length)
+                    .contentLength(zipOutputStream.size())
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)  // 用于通用文件下载
                     .body(resource);
 

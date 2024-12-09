@@ -10,7 +10,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import java.time.LocalDateTime;
 import java.util.Base64;
-import java.util.Optional;
+import java.util.List;
 
 @Service(value = "FortisObjService")
 
@@ -20,7 +20,7 @@ public class FortisObjService {
 private FortisObjRepository fortisObjRepository;
 
 
-public Optional<FortisObj> findByPostId(Integer id){
+public List<FortisObj> findByPostId(Integer id){
 
     return fortisObjRepository.findByPostId(id);
 }

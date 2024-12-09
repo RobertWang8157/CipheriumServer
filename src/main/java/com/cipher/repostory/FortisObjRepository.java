@@ -4,12 +4,12 @@ import com.cipher.entity.FortisObj;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface FortisObjRepository extends JpaRepository<FortisObj, Integer> {
 
 
-    public Optional<FortisObj> findByPostId(int postId);
+    public List<FortisObj> findByPostId(int postId);
 
 }
