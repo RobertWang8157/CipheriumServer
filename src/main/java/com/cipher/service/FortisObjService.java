@@ -5,7 +5,6 @@ import com.cipher.entity.FortisObj;
 import com.cipher.repostory.FortisObjRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -25,13 +24,12 @@ public Optional<FortisObj> findByPostId(Integer id){
 
     return fortisObjRepository.findByPostId(id);
 }
-    public void encryptAndSaveImage(Integer postId, MultipartFile file)  {
+    public void encryptAndSaveImage(Integer postId, byte[] fileBytes)  {
         try {
             LocalDateTime nowDate = LocalDateTime.now();
             // 生成随机 IV
             byte[] iv = AesEncryptUtil.generateIV();
 
-            byte[] fileBytes = file.getBytes();
             byte[] decodedKey = Base64.getDecoder().decode("M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=");
 
             SecretKey secretKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");

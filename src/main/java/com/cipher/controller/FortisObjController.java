@@ -18,9 +18,14 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 @RestController
 @RequestMapping(value = "/fortis/obj", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -47,12 +52,45 @@ private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
     public ResponseEntity uploadImage(@RequestHeader("X-post-id") Integer postId, @RequestParam("files") MultipartFile[] uploadFiles) {
         try {
             for (MultipartFile uploadFile : uploadFiles) {
-                fortisObjService.encryptAndSaveImage(postId, uploadFile);
+
+                byte[] decompressedImageBytes = decompressImage(uploadFile);
+
+                fortisObjService.encryptAndSaveImage(postId, decompressedImageBytes);
             }
             return ResponseEntity.status(HttpStatus.CREATED).body("Success");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload: " + e.getMessage());
         }
+    }
+
+    public byte[] decompressImage(MultipartFile file) throws IOException {
+        // 获取文件的输入流
+        InputStream inputStream = file.getInputStream();
+
+        // 创建 ZipInputStream 来读取压缩文件
+        ZipInputStream zipInputStream = new ZipInputStream(inputStream);
+
+        // 获取压缩文件中的第一个文件
+        ZipEntry entry = zipInputStream.getNextEntry();
+
+        // 检查是否有文件
+        if (entry == null) {
+            throw new IOException("No files in the zip archive");
+        }
+
+        // 将解压后的数据保存到 ByteArrayOutputStream
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        byte[] buffer = new byte[1024];
+        int len;
+        while ((len = zipInputStream.read(buffer)) > 0) {
+            outputStream.write(buffer, 0, len);
+        }
+
+        // 关闭流
+        zipInputStream.closeEntry();
+        zipInputStream.close();
+
+        return outputStream.toByteArray();
     }
 
 
