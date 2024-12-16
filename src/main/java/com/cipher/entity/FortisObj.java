@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Data
 @Table(name = "FORTIS_OBJ", schema = "cipherium", catalog = "")
 public class FortisObj {
+
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "id")
@@ -17,7 +18,8 @@ public class FortisObj {
     @Column(name = "post_id")
     private int postId;
 
-    @Basic
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
     @Column(name = "data")
     private byte[] data;
 

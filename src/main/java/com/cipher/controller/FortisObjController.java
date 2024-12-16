@@ -2,6 +2,7 @@ package com.cipher.controller;
 
 import com.cipher.auth.AesEncryptUtil;
 import com.cipher.dto.BasicDto;
+import com.cipher.dto.FortisObjDTO;
 import com.cipher.entity.FortisObj;
 import com.cipher.entity.PostEntity;
 import com.cipher.service.FortisObjService;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -133,13 +135,64 @@ private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
 
     @RequestMapping(value = "/deorsum", method = RequestMethod.POST)
     public ResponseEntity<Resource> downloadImages(@RequestParam("id") Integer id) {
-        List<FortisObj> optionalFiles = fortisObjService.findByPostId(id);
+        Optional<FortisObj> optionalFiles = fortisObjService.findById(id);
 
         if (optionalFiles.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
 
-        FortisObj encryptedFile = optionalFiles.get(0);
+        FortisObj encryptedFile = optionalFiles.get();
+        byte[] encryptedData = encryptedFile.getData();
+        byte[] iv = encryptedFile.getIv();
+
+        try {
+            // 解密密钥
+            byte[] decodedKey = Base64.getDecoder().decode(secretKey);
+            SecretKey secretKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+
+            // 解密文件数据
+            byte[] decryptedData = AesEncryptUtil.decrypt(encryptedData, secretKey, iv);
+
+            // 创建 ZIP 文件流
+            ByteArrayOutputStream zipOutputStream = new ByteArrayOutputStream();
+            try (ZipOutputStream zos = new ZipOutputStream(zipOutputStream)) {
+                // 创建 ZIP 条目并写入解密数据
+                ZipEntry zipEntry = new ZipEntry("image.jpg");
+                zos.putNextEntry(zipEntry);
+                zos.write(decryptedData);
+                zos.closeEntry();
+            }
+
+            // 将 ZIP 文件流包装为资源
+            ByteArrayResource resource = new ByteArrayResource(zipOutputStream.toByteArray());
+
+            // 设置响应头，标明文件类型和文件名
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=files.zip");
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(zipOutputStream.size())
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)  // 用于通用文件下载
+                    .body(resource);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+
+    @RequestMapping(value = "/downloadImage", method = RequestMethod.POST)
+    public ResponseEntity<Resource> downloadImage(@RequestParam("id") Integer id) {
+        Optional<FortisObj> optionalFiles = fortisObjService.findById(id);
+
+        if (optionalFiles.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        FortisObj encryptedFile = optionalFiles.get();
         byte[] encryptedData = encryptedFile.getData();
         byte[] iv = encryptedFile.getIv();
 
@@ -188,6 +241,17 @@ private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
             List<PostEntity> posts = postService.findPosts();
             return ResponseEntity.ok().body(posts);
         } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @RequestMapping(value = "/getObjIds", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public ResponseEntity<List<FortisObjDTO>> getObjId(@RequestParam("postId") Integer postId) {
+        try {
+            List<FortisObjDTO> posts = fortisObjService.findByPostId(postId);
+            return ResponseEntity.ok().body(posts);
+        } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }

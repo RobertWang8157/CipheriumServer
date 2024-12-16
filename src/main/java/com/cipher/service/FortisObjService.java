@@ -1,6 +1,7 @@
 package com.cipher.service;
 
 import com.cipher.auth.AesEncryptUtil;
+import com.cipher.dto.FortisObjDTO;
 import com.cipher.entity.FortisObj;
 import com.cipher.repostory.FortisObjRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.List;
+import java.util.Optional;
 
 @Service(value = "FortisObjService")
 
@@ -20,10 +22,15 @@ public class FortisObjService {
 private FortisObjRepository fortisObjRepository;
 
 
-public List<FortisObj> findByPostId(Integer id){
+public List<FortisObjDTO> findByPostId(Integer id){
 
     return fortisObjRepository.findByPostId(id);
 }
+
+    public Optional<FortisObj> findById(Integer id){
+
+        return fortisObjRepository.findById(id);
+    }
     public void encryptAndSaveImage(Integer postId, byte[] fileBytes)  {
         try {
             LocalDateTime nowDate = LocalDateTime.now();
