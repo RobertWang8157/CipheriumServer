@@ -7,6 +7,7 @@ import com.cipher.entity.FortisObj;
 import com.cipher.entity.PostEntity;
 import com.cipher.service.FortisObjService;
 import com.cipher.service.PostService;
+import net.coobird.thumbnailator.Thumbnails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -19,6 +20,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -153,6 +157,9 @@ private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
             // 解密文件数据
             byte[] decryptedData = AesEncryptUtil.decrypt(encryptedData, secretKey, iv);
 
+            decryptedData = createThumbnail(decryptedData,700,700);
+
+
             // 创建 ZIP 文件流
             ByteArrayOutputStream zipOutputStream = new ByteArrayOutputStream();
             try (ZipOutputStream zos = new ZipOutputStream(zipOutputStream)) {
@@ -181,6 +188,21 @@ private final String secretKey="M2OO6K2y2SNCbR+VX/TWHYzQEeJDr8y1n6tKMWmxIqw=";
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(null);
         }
+    }
+    public byte[] createThumbnail(byte[] imageBytes, int width, int height) throws IOException {
+        // 将 byte[] 转换为 BufferedImage
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(imageBytes);
+        BufferedImage originalImage = ImageIO.read(byteArrayInputStream);
+
+        // 使用 Thumbnailator 生成缩略图
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        Thumbnails.of(originalImage)
+                .size(width, height)
+                .outputFormat("jpg") // 指定输出格式（例如：jpg, png）
+                .toOutputStream(byteArrayOutputStream);
+
+        // 返回生成的缩略图的 byte[]
+        return byteArrayOutputStream.toByteArray();
     }
 
 
