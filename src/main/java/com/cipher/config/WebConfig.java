@@ -1,7 +1,6 @@
 package com.cipher.config;
 
 
-
 import com.cipher.auth.AesPasswordEncoder;
 import com.cipher.auth.JWTRequestFilter;
 import com.cipher.auth.UserPasswordCheckFilter;
@@ -21,6 +20,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.tensorflow.Graph;
+import org.tensorflow.Session;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 
 @EnableAsync
@@ -80,7 +85,20 @@ public class WebConfig {
         return httpSecurity.build();
     }
 
+    private static final String MODEL_PATH = "/Users/johnny/IdeaProjects/Cipherium/src/main/resources/20180408-102900.pb";
 
+    @Bean
+    public Graph graph() throws IOException {
+        Graph graph = new Graph();
+        byte[] graphDef = Files.readAllBytes(Paths.get(MODEL_PATH));
+        graph.importGraphDef(graphDef);
+        return graph;
+    }
+
+    @Bean
+    public Session session(Graph graph) {
+        return new Session(graph);
+    }
 
 
 }

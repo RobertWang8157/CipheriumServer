@@ -3,8 +3,10 @@ package com.cipher.controller;
 import com.cipher.auth.JWTProvider;
 import com.cipher.dto.AuthDto;
 import com.cipher.dto.BasicDto;
+import com.cipher.dto.FaceIdDto;
 import com.cipher.dto.LoginDto;
 import com.cipher.exception.ForbiddenException;
+import com.cipher.service.FaceIdService;
 import com.cipher.service.LogInOutService;
 import com.cipher.service.UserService;
 import com.cipher.util.Message;
@@ -17,13 +19,12 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 
 @RestController
@@ -37,6 +38,8 @@ public class AuthController {
     protected AuthenticationManager authenticationManager;
     @Autowired
     private LogInOutService logInOutService;
+    @Autowired
+    private FaceIdService faceIdService;
     Logger logger = LoggerFactory.getLogger(AuthController.class);
 
 
@@ -71,4 +74,26 @@ public class AuthController {
         }
     }
 
+    @RequestMapping(value = "/faceid", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public ResponseEntity<String> getObjId(@RequestBody() FaceIdDto faceIdDto) {
+        try {
+            String result = faceIdService.identifyFaceId(faceIdDto.getUsername(), faceIdDto.getFacePicStr());
+            return ResponseEntity.ok().body(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    @RequestMapping(value = "/faceid2", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public ResponseEntity<String> getObjId2(@RequestHeader("X-username") String username, @RequestParam("files") MultipartFile[] uploadFiles) {
+        try {
+            byte[] fileContent = uploadFiles[0].getBytes();
+            String result = faceIdService.identifyFaceId(username, Base64.getEncoder().encodeToString(fileContent));
+            return ResponseEntity.ok().body(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

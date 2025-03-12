@@ -1,9 +1,6 @@
 package com.cipher.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 
@@ -16,5 +13,9 @@ public class User {
     private String userName;
     @Column(name = "PASSWORD")
     private String password;
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "face_id")
+    private byte[] faceId;
 
 }
