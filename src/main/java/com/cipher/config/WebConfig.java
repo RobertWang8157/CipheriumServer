@@ -44,6 +44,9 @@ public class WebConfig {
     @Autowired
     private AesPasswordEncoder aesPasswordEncoder;
 
+    public static String[] excludeUrls = new String[]{"/auth/login", "/auth/faceid","/auth/faceid2"};
+
+
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(jwtUserDetailsService).passwordEncoder(aesPasswordEncoder);
@@ -78,7 +81,7 @@ public class WebConfig {
         httpSecurity.addFilterBefore((Filter) userPasswordCheckFilter, (Class<? extends Filter>) UsernamePasswordAuthenticationFilter.class);
 
         httpSecurity.authorizeRequests()
-                .requestMatchers((request) -> "/auth/login".equals(request.getServletPath()))
+                .requestMatchers(excludeUrls)
                 .permitAll()
                 .anyRequest().authenticated();
 

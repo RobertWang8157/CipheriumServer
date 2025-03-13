@@ -28,7 +28,7 @@ public class UserPasswordCheckFilter extends OncePerRequestFilter {
     private MessageSource messageSource;
 
 
-    private List<String> excludeUrls = List.of("/auth/login");
+    private List<String> excludeUrls = List.of("/auth/login", "/auth/faceid","/auth/faceid2");
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws IOException {
