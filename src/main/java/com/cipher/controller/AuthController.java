@@ -96,4 +96,20 @@ public class AuthController {
             return null;
         }
     }
+
+
+    @RequestMapping(value = "/registerFaceId", method = RequestMethod.POST, produces = "application/json;charset=UTF-8")
+    public ResponseEntity<String> registerFaceID(@RequestHeader("X-username") String username, @RequestParam("files") MultipartFile[] uploadFiles) {
+        try {
+            byte[] fileContent = uploadFiles[0].getBytes();
+
+            String base64String = Base64.getEncoder().encodeToString(fileContent);
+
+            userService.saveFaceId(username, base64String.getBytes());
+            return ResponseEntity.ok().body("Success");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
 }

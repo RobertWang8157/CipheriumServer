@@ -22,4 +22,10 @@ public class UserService {
         return userRepository.findOfficerByUserName(name);
     }
 
+    public void saveFaceId(String name, byte [] faceId){
+        User user = findByUserName(name);
+        user.setFaceId(faceId);
+        userRepository.saveAndFlush(user);
+    }
+
 }
